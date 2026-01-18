@@ -1,0 +1,1 @@
+#Jogo de Xadrez para 2 Jogadores. Criado em Java para prática dos conceitos que aprendi até o momento.
