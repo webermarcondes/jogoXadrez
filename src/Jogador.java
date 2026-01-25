@@ -2,11 +2,13 @@ public class Jogador {
 
     private TipoJogador tipoJogador;
     private String nome;
+    private Integer jogadorId;
 
 
-    public Jogador(TipoJogador tipoJogador, String nome) {
+    public Jogador(TipoJogador tipoJogador, String nome, Integer jogadorId) {
         this.tipoJogador = tipoJogador;
         this.nome = nome;
+        this.jogadorId = jogadorId;
     }
 
     public TipoJogador getTipoJogador() {
@@ -23,5 +25,13 @@ public class Jogador {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public Integer getJogadorId() {
+        return jogadorId;
+    }
+
+    public void setJogadorId(Integer jogadorId) {
+        this.jogadorId = jogadorId;
     }
 }
