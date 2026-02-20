@@ -1,0 +1,6 @@
+public enum TipoMovimentoDaPeca {
+    HORIZONTAL,
+    VERTICAL,
+    DIAGONAL_ESQUERDA_PARA_DIREITA,
+    DIAGONAL_DIREITA_PARA_ESQUERDA;
+}

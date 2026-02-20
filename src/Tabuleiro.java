@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.function.Supplier;
 
 public class Tabuleiro {
 
@@ -141,50 +142,53 @@ public class Tabuleiro {
 
         if (peca.getTipoPeca() == TipoPeca.TORRE) {
 
-
-            movimentosDaPeca.put("Vertical", calcularMovimentoVertical(linhaPeca,
-                                                                        colunaPeca,
-                                                                        peca.getJogador().getJogadorId()));
-
+            movimentosDaPeca.put("Vertical", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                                                                                           peca.getJogador().getJogadorId(),
+                                                                                           TipoMovimentoDaPeca.VERTICAL));
 
 
+            movimentosDaPeca.put("Horizontal", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                                                                                             peca.getJogador().getJogadorId(),
+                                                                                             TipoMovimentoDaPeca.HORIZONTAL));
 
-            movimentosDaPeca.put("Horizontal", calcularMovimentoHorizontal(linhaPeca,
-                                                                           colunaPeca,
-                                                                            peca.getJogador().getJogadorId()));
+
         }
 
         else if(peca.getTipoPeca() == TipoPeca.BISPO) {
-            movimentosDaPeca.put("Diagonal \\", calcularMovimentosDiagonalEsquerdaParaDireita(linhaPeca,
-                                                                        colunaPeca,
-                                                                        peca.getJogador().getJogadorId()));
 
-            movimentosDaPeca.put("Diagonal /", calcularMovimentosDiagonalDireitaParaEsquerda(linhaPeca,
-                                                                                              colunaPeca,
-                                                                                              peca.getJogador().getJogadorId()));
-        }
+
+            movimentosDaPeca.put("Diagonal \\", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                                                                                              peca.getJogador().getJogadorId(),
+                                                                                              TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA));
+
+
+            movimentosDaPeca.put("Diagonal /", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                                                                                             peca.getJogador().getJogadorId(),
+                                                                                             TipoMovimentoDaPeca.DIAGONAL_DIREITA_PARA_ESQUERDA));
+ }
 
         else if(peca.getTipoPeca() == TipoPeca.RAINHA || peca.getTipoPeca() == TipoPeca.REI) {
 
-            movimentosDaPeca.put("Vertical", calcularMovimentoVertical(linhaPeca,
-                    colunaPeca,
-                    peca.getJogador().getJogadorId()));
+            movimentosDaPeca.put("Vertical", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                    peca.getJogador().getJogadorId(),
+                    TipoMovimentoDaPeca.VERTICAL));
+
+
+            movimentosDaPeca.put("Horizontal", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                    peca.getJogador().getJogadorId(),
+                    TipoMovimentoDaPeca.HORIZONTAL));
 
 
 
+            movimentosDaPeca.put("Diagonal \\", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                    peca.getJogador().getJogadorId(),
+                    TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA));
 
-            movimentosDaPeca.put("Horizontal", calcularMovimentoHorizontal(linhaPeca,
-                    colunaPeca,
-                    peca.getJogador().getJogadorId()));
 
+            movimentosDaPeca.put("Diagonal /", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
+                    peca.getJogador().getJogadorId(),
+                    TipoMovimentoDaPeca.DIAGONAL_DIREITA_PARA_ESQUERDA));
 
-            movimentosDaPeca.put("Diagonal \\", calcularMovimentosDiagonalEsquerdaParaDireita(linhaPeca,
-                    colunaPeca,
-                    peca.getJogador().getJogadorId()));
-
-            movimentosDaPeca.put("Diagonal /", calcularMovimentosDiagonalDireitaParaEsquerda(linhaPeca,
-                    colunaPeca,
-                    peca.getJogador().getJogadorId()));
 
         }
 
@@ -192,29 +196,94 @@ public class Tabuleiro {
     }
 
 
+    private List<int[]> calcularMovimentosDisponiveisPorTipoMovimento(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoPeca) {
+        List<int[]> movimentosDisponiveis = new ArrayList<>();
 
-    private List<int[]> calcularMovimentosDiagonalEsquerdaParaDireita(int linhaAtualPeca, int colunaAtualPeca, Integer jogadorId) {
+        Supplier<Boolean> analisarPosicaoAnterior;
+        Supplier<Boolean> analisarProximaPosicao;
 
-        List<int[]> movimentosDiagonalEsquerdaParaDireita = new ArrayList<>();
+        int[] posicaoAnteriorPeca = new int[2];
+        int[] proximaPosicaoPeca = new int[2];
+
+        if(tipoMovimentoPeca == TipoMovimentoDaPeca.HORIZONTAL) {
+
+            //Valores iniciais de linha([0]), coluna([1]) e validação para antes da peça
+            posicaoAnteriorPeca[0] = posicaoAtualPeca[0];
+            posicaoAnteriorPeca[1] = posicaoAtualPeca[1] - 1;
+
+            analisarPosicaoAnterior = () -> posicaoAnteriorPeca[1] > -1;
 
 
-        int linhaAnteriorPeca = linhaAtualPeca - 1;
-        int colunaAnteriorPeca = colunaAtualPeca - 1;
+            //Valores iniciais de linha([0]), coluna([1]) e validação para após a peça
+            proximaPosicaoPeca[0] = posicaoAtualPeca[0];;
+            proximaPosicaoPeca[1] = posicaoAtualPeca[1] + 1;
 
-        int proximaLinhaPeca = linhaAtualPeca + 1;
-        int proximaColunaPeca = colunaAtualPeca + 1;
+            analisarProximaPosicao = () -> proximaPosicaoPeca[1] < 8;
+        }
 
-        //Analise antes da peça
-        while (linhaAnteriorPeca >= 0 & colunaAnteriorPeca >= 0) {
+        else if(tipoMovimentoPeca == TipoMovimentoDaPeca.VERTICAL) {
 
-            if (casas[linhaAnteriorPeca][colunaAnteriorPeca] == null) { //Casa com peça vazia
-                movimentosDiagonalEsquerdaParaDireita.addFirst(new int[]{linhaAnteriorPeca, colunaAnteriorPeca});
+            //Valores iniciais de linha([0]), coluna([1]) e validação para antes da peça
+            posicaoAnteriorPeca[0] = posicaoAtualPeca[0] - 1;
+            posicaoAnteriorPeca[1] = posicaoAtualPeca[1];
+
+            analisarPosicaoAnterior = () -> posicaoAnteriorPeca[0] > -1;
+
+
+            //Valores iniciais de linha([0]), coluna([1]) e validação para após a peça
+            proximaPosicaoPeca[0] = posicaoAtualPeca[0] + 1;
+            proximaPosicaoPeca[1] = posicaoAtualPeca[1];
+
+            analisarProximaPosicao = () -> proximaPosicaoPeca[0] < 8;
+
+        }
+
+        else if (tipoMovimentoPeca == TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA) {
+
+            //Valores iniciais de linha([0]), coluna([1]) e validação para antes da peça
+            posicaoAnteriorPeca[0] = posicaoAtualPeca[0] - 1;
+            posicaoAnteriorPeca[1] = posicaoAtualPeca[1] - 1;
+
+            analisarPosicaoAnterior = () -> posicaoAnteriorPeca[0] > -1 & posicaoAnteriorPeca[1] > -1;
+
+
+            //Valores iniciais de linha([0]), coluna([1]) e validação para após a peça
+            proximaPosicaoPeca[0] = posicaoAtualPeca[0] + 1;
+            proximaPosicaoPeca[1] = posicaoAtualPeca[1] + 1;
+
+            analisarProximaPosicao = () -> proximaPosicaoPeca[0] < 8 & proximaPosicaoPeca[1] < 8;
+        }
+
+        else { //Diagonal Direita para Esquerda /
+
+            //Valores iniciais de linha([0]), coluna([1]) e validação para antes da peça
+            posicaoAnteriorPeca[0] = posicaoAtualPeca[0] + 1;
+            posicaoAnteriorPeca[1] = posicaoAtualPeca[1] - 1;
+
+            analisarPosicaoAnterior = () -> posicaoAnteriorPeca[0] < 8 & posicaoAnteriorPeca[1] > -1;
+
+
+            //Valores iniciais de linha([0]), coluna([1]) e validação para após a peça
+            proximaPosicaoPeca[0] = posicaoAtualPeca[0] - 1;
+            proximaPosicaoPeca[1] = posicaoAtualPeca[1] + 1;
+
+            analisarProximaPosicao = () -> proximaPosicaoPeca[0] > -1 & proximaPosicaoPeca[1] < 8;
+
+        }
+
+
+
+        //ANÁLISE ANTES DA PEÇA
+        while(analisarPosicaoAnterior.get()) {
+
+            if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]] == null) { //Casa com peça vazia
+                movimentosDisponiveis.addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
             }
 
-            else if (casas[linhaAnteriorPeca][colunaAnteriorPeca].getJogador().getJogadorId() != jogadorId) {
+            else if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]].getJogador().getJogadorId() != jogadorId) {
 
-                System.out.println("Identificado peça inimiga na posição linha " + linhaAnteriorPeca + ", coluna " + colunaAnteriorPeca);
-                movimentosDiagonalEsquerdaParaDireita.addFirst(new int[]{linhaAnteriorPeca, colunaAnteriorPeca});
+                System.out.println("Identificado peça inimiga na posição linha " + posicaoAnteriorPeca[0] + ", coluna " + posicaoAnteriorPeca[1]);
+                movimentosDisponiveis.addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
                 break;
 
             } //Casa com Peça Inimiga
@@ -223,23 +292,40 @@ public class Tabuleiro {
                 break;
             } //Casa com Peça Aliada
 
-            --linhaAnteriorPeca;
-            --colunaAnteriorPeca;
-        }
 
-        //Analise após a peça
-        while (proximaLinhaPeca <= 7 & proximaColunaPeca <= 7) {
 
-            if (casas[proximaLinhaPeca][proximaColunaPeca] == null) { //Casa com peça vazia
-                movimentosDiagonalEsquerdaParaDireita.add(new int[]{proximaLinhaPeca, proximaColunaPeca});
+            if(tipoMovimentoPeca == TipoMovimentoDaPeca.HORIZONTAL) {
+                posicaoAnteriorPeca[1]--;
             }
 
-            else if (casas[proximaLinhaPeca][proximaColunaPeca].getJogador().getJogadorId() != jogadorId) {
+            else if(tipoMovimentoPeca == TipoMovimentoDaPeca.VERTICAL) {
+                posicaoAnteriorPeca[0]--;
+            }
 
-                System.out.println("Identificado peça inimiga na posição linha " + proximaLinhaPeca + ", coluna " + proximaColunaPeca);
-                movimentosDiagonalEsquerdaParaDireita.add(new int[]{proximaLinhaPeca, proximaColunaPeca});
+            else if (tipoMovimentoPeca == TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA) {
+                posicaoAnteriorPeca[0]--;
+                posicaoAnteriorPeca[1]--;
+            }
+
+            else { // Diagonal Direita para Esquerda /
+                posicaoAnteriorPeca[0]++;
+                posicaoAnteriorPeca[1]--;
+            }
+        }
+
+        
+        //ANÁLISE APÓS A PEÇA
+        while(analisarProximaPosicao.get()) {
+
+            if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]] == null) { //Casa com peça vazia
+                movimentosDisponiveis.add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+            }
+
+            else if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]].getJogador().getJogadorId() != jogadorId) {
+
+                System.out.println("Identificado peça inimiga na posição linha " + proximaPosicaoPeca[0] + ", coluna " + proximaPosicaoPeca[1]);
+                movimentosDisponiveis.add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
                 break;
-
 
             } //Casa com Peça Inimiga
 
@@ -247,190 +333,29 @@ public class Tabuleiro {
                 break;
             } //Casa com Peça Aliada
 
-            ++proximaLinhaPeca;
-            ++proximaColunaPeca;
+
+
+            if(tipoMovimentoPeca == TipoMovimentoDaPeca.HORIZONTAL) {
+                proximaPosicaoPeca[1]++;
+            }
+
+            else if(tipoMovimentoPeca == TipoMovimentoDaPeca.VERTICAL) {
+                proximaPosicaoPeca[0]++;
+            }
+
+            else if (tipoMovimentoPeca == TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA) {
+                proximaPosicaoPeca[0]++;
+                proximaPosicaoPeca[1]++;
+            }
+
+            else { // Diagonal Direita para Esquerda /
+                proximaPosicaoPeca[0]--;
+                proximaPosicaoPeca[1]++;
+            }
         }
 
-        return movimentosDiagonalEsquerdaParaDireita;
-
+        return movimentosDisponiveis;
     }
-
-
-    private List<int[]> calcularMovimentosDiagonalDireitaParaEsquerda(int linhaAtualPeca, int colunaAtualPeca, int jogadorId) {
-
-        List<int[]> movimentosDiagonalDireitaParaEsquerda = new ArrayList<>();
-
-
-        //Anterior a peça
-        int linhaAnteriorPeca = linhaAtualPeca + 1;
-        int colunaAnteriorPeca = colunaAtualPeca - 1;
-
-        //Após a Peça
-        int proximaLinhaPeca = linhaAtualPeca - 1;
-        int proximaColunaPeca = colunaAtualPeca + 1;
-
-        //Análise antes da peça
-        while (linhaAnteriorPeca <= 7 & colunaAnteriorPeca >= 0) {
-
-            if (casas[linhaAnteriorPeca][colunaAnteriorPeca] == null) { //Casa com peça vazia
-                movimentosDiagonalDireitaParaEsquerda.add(new int[]{linhaAnteriorPeca, colunaAnteriorPeca});
-            }
-
-            else if (casas[linhaAnteriorPeca][colunaAnteriorPeca].getJogador().getJogadorId() != jogadorId) {
-
-                System.out.println("Identificado peça inimiga na posição linha " + linhaAnteriorPeca + ", coluna " + colunaAnteriorPeca);
-                movimentosDiagonalDireitaParaEsquerda.add(new int[]{linhaAnteriorPeca, colunaAnteriorPeca});
-                break;
-
-
-            } //Casa com Peça Inimiga
-
-            else {
-                break;
-            } //Casa com Peça Aliada
-
-
-            ++linhaAnteriorPeca;
-            --colunaAnteriorPeca;
-
-        }
-
-        //Análise após a peça
-        while (proximaLinhaPeca >= 0 & proximaColunaPeca <= 7) {
-
-            if (casas[proximaLinhaPeca][proximaColunaPeca] == null) { //Casa com peça vazia
-                movimentosDiagonalDireitaParaEsquerda.addFirst(new int[]{proximaLinhaPeca, proximaColunaPeca});
-            }
-
-            else if (casas[proximaLinhaPeca][proximaColunaPeca].getJogador().getJogadorId() != jogadorId) {
-
-                System.out.println("Identificado peça inimiga na posição linha " + proximaLinhaPeca + ", coluna " + proximaColunaPeca);
-                movimentosDiagonalDireitaParaEsquerda.addFirst(new int[]{proximaLinhaPeca, proximaColunaPeca});
-                break;
-
-            } //Casa com Peça Inimiga
-
-            else {
-                break;
-            } //Casa com Peça Aliada
-
-            --proximaLinhaPeca;
-            ++proximaColunaPeca;
-
-        }
-
-        return movimentosDiagonalDireitaParaEsquerda;
-    }
-
-    private List<int[]> calcularMovimentoHorizontal(int linhaAtualPeca, int colunaAtualPeca, Integer jogadorId) {
-
-        List<int[]> movimentosHorizontais = new ArrayList<>();
-
-
-        //Calculo de posiçoes livres anteriores a Coluna da Peça
-        if(colunaAtualPeca > 0) {
-            for (int colunaAnterior = colunaAtualPeca-1; colunaAnterior >= 0; colunaAnterior--) {
-
-                if (casas[linhaAtualPeca][colunaAnterior] == null) { //Casa com peça vazia
-                    movimentosHorizontais.addFirst(new int[]{linhaAtualPeca, colunaAnterior});
-                }
-
-                else if (casas[linhaAtualPeca][colunaAnterior].getJogador().getJogadorId() != jogadorId) {
-
-                    System.out.println("Identificado peça inimiga na posição linha " + linhaAtualPeca + ", coluna " + colunaAnterior);
-                    movimentosHorizontais.addFirst(new int[]{linhaAtualPeca, colunaAnterior});
-                    break;
-
-                } //Casa com Peça Inimiga
-
-                else {
-                    break;
-                }
-            }
-        }
-
-        //Calculo das posições Livres após a Coluna da Peça
-        if(colunaAtualPeca < 7) {
-            for (int proximaColuna = colunaAtualPeca+1; proximaColuna < 8; proximaColuna++) {
-
-                if (casas[linhaAtualPeca][proximaColuna] == null) { //Casa com peça vazia
-                    movimentosHorizontais.add(new int[]{linhaAtualPeca, proximaColuna});
-                }
-
-                else if (casas[linhaAtualPeca][proximaColuna].getJogador().getJogadorId() != jogadorId) {
-
-                    System.out.println("Identificado peça inimiga na posição linha " + linhaAtualPeca + ", coluna " + proximaColuna);
-                    movimentosHorizontais.add(new int[]{linhaAtualPeca, proximaColuna});
-                    break;
-
-                } //Casa com Peça Inimiga
-
-                else {
-                    break;
-                }
-            }
-        }
-
-
-        return movimentosHorizontais;
-
-
-    }
-
-    private List<int[]> calcularMovimentoVertical(int linhaAtualPeca, int colunaAtualPeca, int jogadorId) {
-
-        List<int[]> movimentosVerticais = new ArrayList<>();
-
-
-        //Calculo de posiçoes livres anteriores a Linha da Peça
-        if(linhaAtualPeca > 0) {
-            for (int linhaAnterior = linhaAtualPeca-1; linhaAnterior >= 0; linhaAnterior--) {
-
-                if (casas[linhaAnterior][colunaAtualPeca] == null) { //Casa com peça vazia
-                    movimentosVerticais.addFirst(new int[]{linhaAnterior, colunaAtualPeca});
-                }
-
-                else if (casas[linhaAnterior][colunaAtualPeca].getJogador().getJogadorId() != jogadorId) {
-
-                    System.out.println("Identificado peça inimiga na posição linha " + linhaAnterior + ", coluna " + colunaAtualPeca);
-                    movimentosVerticais.addFirst(new int[]{linhaAnterior, colunaAtualPeca});
-                    break;
-
-                } //Casa com Peça Inimiga
-
-                else {
-                    break;
-                }
-            }
-        }
-
-        //Calculo das posições Livres após a Linha da Peça
-        if(linhaAtualPeca < 7) {
-            for(int proximaLinha = linhaAtualPeca + 1; proximaLinha < 8; proximaLinha++) {
-
-                if (casas[proximaLinha][colunaAtualPeca] == null) { //Casa com peça vazia
-                    movimentosVerticais.add(new int[]{proximaLinha, colunaAtualPeca});
-                }
-
-                else if (casas[proximaLinha][colunaAtualPeca].getJogador().getJogadorId() != jogadorId) {
-
-                    System.out.println("Identificado peça inimiga na posição linha " + proximaLinha + ", coluna " + colunaAtualPeca);
-                    movimentosVerticais.add(new int[]{proximaLinha, colunaAtualPeca});
-                    break;
-
-                } //Casa com Peça Inimiga
-
-                else {
-                    break;
-                }
-            }
-        }
-
-
-        return movimentosVerticais;
-
-     }
-
 
     private List<Peca> gerarPecas(String[] pecasPorLinha, Jogador jogador, CorPeca corPeca) {
 
