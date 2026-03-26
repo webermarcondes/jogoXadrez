@@ -133,71 +133,235 @@ public class Tabuleiro {
         }
     }
 
-    public Map<String, List<int[]>> calcularMovimentosPorPeca(int linhaPeca, int colunaPeca) {
+    public Map<String, Map<String,List<int[]>>> calcularMovimentosPorPeca(int linhaPeca, int colunaPeca) {
 
 
-        Map<String, List<int[]>> movimentosDaPeca = new LinkedHashMap<>();
+        Map<String, Map<String,List<int[]>>> movimentosDaPeca = new LinkedHashMap<>();
 
         Peca peca = casas[linhaPeca][colunaPeca];
 
-        if (peca.getTipoPeca() == TipoPeca.TORRE) {
+        for(TipoMovimentoDaPeca tipoMovimento: peca.getTiposMovimentoDaPeca()) {
 
-            movimentosDaPeca.put("Vertical", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                                                                                           peca.getJogador().getJogadorId(),
-                                                                                           TipoMovimentoDaPeca.VERTICAL));
+            if(tipoMovimento == TipoMovimentoDaPeca.VERTICAL_CIMA || tipoMovimento == TipoMovimentoDaPeca.VERTICAL_BAIXO) {
 
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoPeao(new int[]{linhaPeca, colunaPeca},
 
-            movimentosDaPeca.put("Horizontal", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                                                                                             peca.getJogador().getJogadorId(),
-                                                                                             TipoMovimentoDaPeca.HORIZONTAL));
+                                                                                    peca.getJogador().getJogadorId(),
+                                                                                    tipoMovimento));
+            }
 
+            else if (tipoMovimento == TipoMovimentoDaPeca.MOVIMENTO_EM_L) {
 
-        }
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoCavalo(new int[]{linhaPeca, colunaPeca},
+                                                                                      peca.getJogador().getJogadorId()));
 
-        else if(peca.getTipoPeca() == TipoPeca.BISPO) {
-
-
-            movimentosDaPeca.put("Diagonal \\", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                                                                                              peca.getJogador().getJogadorId(),
-                                                                                              TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA));
+            }
 
 
-            movimentosDaPeca.put("Diagonal /", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                                                                                             peca.getJogador().getJogadorId(),
-                                                                                             TipoMovimentoDaPeca.DIAGONAL_DIREITA_PARA_ESQUERDA));
- }
+            else if(tipoMovimento == TipoMovimentoDaPeca.MOVIMENTO_DO_REI) {
 
-        else if(peca.getTipoPeca() == TipoPeca.RAINHA || peca.getTipoPeca() == TipoPeca.REI) {
-
-            movimentosDaPeca.put("Vertical", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                    peca.getJogador().getJogadorId(),
-                    TipoMovimentoDaPeca.VERTICAL));
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoRei(new int[]{linhaPeca, colunaPeca},
+                                                                                              peca.getJogador().getJogadorId()));
+            }
 
 
-            movimentosDaPeca.put("Horizontal", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                    peca.getJogador().getJogadorId(),
-                    TipoMovimentoDaPeca.HORIZONTAL));
+            else {
+                //calculo dos movimentos de ataque e movimentos livres para
+                //torre, bispo e rainha que andam na mesma direção em que atacam, diferente de peças
+                //como o peão que anda reto e ataca em diagonal.
 
 
-
-            movimentosDaPeca.put("Diagonal \\", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                    peca.getJogador().getJogadorId(),
-                    TipoMovimentoDaPeca.DIAGONAL_ESQUERDA_PARA_DIREITA));
-
-
-            movimentosDaPeca.put("Diagonal /", calcularMovimentosDisponiveisPorTipoMovimento(new int[]{linhaPeca, colunaPeca},
-                    peca.getJogador().getJogadorId(),
-                    TipoMovimentoDaPeca.DIAGONAL_DIREITA_PARA_ESQUERDA));
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDisponiveisParaAMesmaDirecao(new int[]{linhaPeca, colunaPeca},
+                        peca.getJogador().getJogadorId(),
+                        tipoMovimento));
 
 
-        }
+                }
+            }
 
         return movimentosDaPeca;
     }
 
 
-    private List<int[]> calcularMovimentosDisponiveisPorTipoMovimento(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoPeca) {
-        List<int[]> movimentosDisponiveis = new ArrayList<>();
+    private Map<String, List<int[]>> calcularMovimentosDoCavalo(int[] posicaoAtualPeca, int jogadorId) {
+
+        Map<String, List<int[]>> movimentosValidosDoCavalo = new LinkedHashMap<>();
+        movimentosValidosDoCavalo.put("Casas Livres", new ArrayList<int[]>());
+        movimentosValidosDoCavalo.put("Casas com Inimigo", new ArrayList<int[]>());
+
+        List<int[]> possiveisMovimentosDoCavalo = new ArrayList<>();
+
+        //Possiveis movimentos da área 01 (Cima)
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]-2, posicaoAtualPeca[1]-1});
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]-2, posicaoAtualPeca[1]+1});
+
+        //Possiveis movimentos da área 02 (Direita)
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]+2});
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]+2});
+
+        //Possiveis movimentos da área 03 (Baixo)
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]+2, posicaoAtualPeca[1]-1});
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]+2, posicaoAtualPeca[1]+1});
+
+        //Possiveis movimentos da área 04 (Esquerda)
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]-2});
+        possiveisMovimentosDoCavalo.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]-2});
+
+
+        for(int[] movimento: possiveisMovimentosDoCavalo) {
+            if((movimento[0] > -1 && movimento[0] < 8) && (movimento[1] > -1 && movimento[1] < 8)) {
+
+                    if(casas[movimento[0]][movimento[1]] == null) {
+                        movimentosValidosDoCavalo.get("Casas Livres").add(movimento);
+                    }
+
+                    else if(casas[movimento[0]][movimento[1]].getJogador().getJogadorId() != jogadorId) {
+                        movimentosValidosDoCavalo.get("Casas com Inimigo").add(movimento);
+                    }
+
+            }
+        }
+
+        return movimentosValidosDoCavalo;
+
+    }
+
+
+    private Map<String, List<int[]>> calcularMovimentosDoPeao(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoDoPeao) {
+
+        Map<String, List<int[]>> movimentosDisponiveis = new LinkedHashMap<>();
+        movimentosDisponiveis.put("Casas Livres", new ArrayList<int[]>());
+        movimentosDisponiveis.put("Casas com Inimigo", new ArrayList<int[]>());
+
+        List<int[]> possiveisMovimentosParaAtaque = new ArrayList<>();
+
+        int quantidadeDeMovimentosAnalisados = 0;
+
+        Supplier<Boolean> analisarProximaPosicao;
+        int[] proximaPosicaoPeca = new int[2];
+
+        if(tipoMovimentoDoPeao == TipoMovimentoDaPeca.VERTICAL_CIMA) {
+
+            proximaPosicaoPeca[0] = posicaoAtualPeca[0] - 1;
+            proximaPosicaoPeca[1] = posicaoAtualPeca[1];
+
+            possiveisMovimentosParaAtaque.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]-1});
+            possiveisMovimentosParaAtaque.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]+1});
+
+            analisarProximaPosicao = () -> proximaPosicaoPeca[0] > -1;
+
+        }
+
+        else { // Vertical para baixo
+            proximaPosicaoPeca[0] = posicaoAtualPeca[0] + 1;
+            proximaPosicaoPeca[1] = posicaoAtualPeca[1];
+
+            possiveisMovimentosParaAtaque.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]-1});
+            possiveisMovimentosParaAtaque.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]+1});
+
+
+            analisarProximaPosicao = () -> proximaPosicaoPeca[0] < 8;
+        }
+
+
+        //Lógica de movimento do peão
+        while(analisarProximaPosicao.get() && quantidadeDeMovimentosAnalisados < casas[posicaoAtualPeca[0]][posicaoAtualPeca[1]].getQuantidadeMaximaDeMovimentoPorTipoMovimento()) {
+
+            if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]] == null) { //Casa com peça vazia
+
+                movimentosDisponiveis.get("Casas Livres").add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+
+            }
+
+            else {
+                break;
+            } //Casa com Peça Aliada ou Inimiga que bloqueiam o movimento do Peão
+
+
+
+            if(tipoMovimentoDoPeao == TipoMovimentoDaPeca.VERTICAL_CIMA) {
+                proximaPosicaoPeca[0]--;
+            }
+
+            else { //Vertical para baixo
+                proximaPosicaoPeca[0]++;
+            }
+
+            quantidadeDeMovimentosAnalisados++;
+
+        }
+
+        //Lógica de análise em diagonal para ataque do peão
+        Peca peca;
+        for(int[] movimento: possiveisMovimentosParaAtaque) {
+
+            if((movimento[0] > -1 && movimento[0] < 8) && (movimento[1] > -1 && movimento[1] < 8)) {
+                peca = casas[movimento[0]][movimento[1]];
+                if(peca != null && peca.getJogador().getJogadorId() != jogadorId) {
+
+                    movimentosDisponiveis.get("Casas com Inimigo").add(new int[]{movimento[0], movimento[1]});
+
+
+                }
+            }
+        }
+
+
+        return movimentosDisponiveis;
+    }
+
+    private Map<String, List<int[]>> calcularMovimentosDoRei(int[] posicaoAtualPeca, int jogadorId) {
+
+        Map<String, List<int[]>> movimentosValidosDoRei = new LinkedHashMap<>();
+        movimentosValidosDoRei.put("Casas Livres", new ArrayList<int[]>());
+        movimentosValidosDoRei.put("Casas com Inimigo", new ArrayList<int[]>());
+
+        List<int[]> possiveisMovimentosDoRei = new ArrayList<>();
+
+        //Movimentos Horizontais
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0], posicaoAtualPeca[1]-1});
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0], posicaoAtualPeca[1]+1});
+
+        //Movimentos Verticais
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]});
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]});
+
+        //Movimentos Diagonal Esquerda para Direita
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]-1});
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]+1});
+
+        //Movimentos Diagonal Direita para Esquerda
+
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0]-1, posicaoAtualPeca[1]+1});
+        possiveisMovimentosDoRei.add(new int[]{posicaoAtualPeca[0]+1, posicaoAtualPeca[1]-1});
+
+
+        for(int[] movimento: possiveisMovimentosDoRei) {
+            if((movimento[0] > -1 && movimento[0] < 8) && (movimento[1] > -1 && movimento[1] < 8)) {
+
+                if(casas[movimento[0]][movimento[1]] == null) {
+                    movimentosValidosDoRei.get("Casas Livres").add(movimento);
+                }
+
+                else if(casas[movimento[0]][movimento[1]].getJogador().getJogadorId() != jogadorId) {
+                    movimentosValidosDoRei.get("Casas com Inimigo").add(movimento);
+                }
+
+            }
+        }
+
+        return movimentosValidosDoRei;
+
+    }
+
+    //responsável por calcular movimentos livres e de ataque
+    //para vertical, horizontal e diagonal
+
+    private Map<String, List<int[]>> calcularMovimentosDisponiveisParaAMesmaDirecao(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoPeca) {
+
+        Map<String, List<int[]>> movimentosDisponiveis = new LinkedHashMap<>();
+        movimentosDisponiveis.put("Casas Livres", new ArrayList<int[]>());
+        movimentosDisponiveis.put("Casas com Inimigo", new ArrayList<int[]>());
 
         Supplier<Boolean> analisarPosicaoAnterior;
         Supplier<Boolean> analisarProximaPosicao;
@@ -220,6 +384,7 @@ public class Tabuleiro {
 
             analisarProximaPosicao = () -> proximaPosicaoPeca[1] < 8;
         }
+
 
         else if(tipoMovimentoPeca == TipoMovimentoDaPeca.VERTICAL) {
 
@@ -276,14 +441,13 @@ public class Tabuleiro {
         //ANÁLISE ANTES DA PEÇA
         while(analisarPosicaoAnterior.get()) {
 
-            if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]] == null) { //Casa com peça vazia
-                movimentosDisponiveis.addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
+            if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]] == null) {
+                movimentosDisponiveis.get("Casas Livres").addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
+
             }
 
             else if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]].getJogador().getJogadorId() != jogadorId) {
-
-                System.out.println("Identificado peça inimiga na posição linha " + posicaoAnteriorPeca[0] + ", coluna " + posicaoAnteriorPeca[1]);
-                movimentosDisponiveis.addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
+                movimentosDisponiveis.get("Casas com Inimigo").addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
                 break;
 
             } //Casa com Peça Inimiga
@@ -291,7 +455,6 @@ public class Tabuleiro {
             else {
                 break;
             } //Casa com Peça Aliada
-
 
 
             if(tipoMovimentoPeca == TipoMovimentoDaPeca.HORIZONTAL) {
@@ -313,18 +476,17 @@ public class Tabuleiro {
             }
         }
 
-        
         //ANÁLISE APÓS A PEÇA
         while(analisarProximaPosicao.get()) {
 
-            if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]] == null) { //Casa com peça vazia
-                movimentosDisponiveis.add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+            if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]] == null) {
+                movimentosDisponiveis.get("Casas Livres").add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+
+
             }
 
             else if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]].getJogador().getJogadorId() != jogadorId) {
-
-                System.out.println("Identificado peça inimiga na posição linha " + proximaPosicaoPeca[0] + ", coluna " + proximaPosicaoPeca[1]);
-                movimentosDisponiveis.add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+                movimentosDisponiveis.get("Casas com Inimigo").add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
                 break;
 
             } //Casa com Peça Inimiga
@@ -332,7 +494,6 @@ public class Tabuleiro {
             else {
                 break;
             } //Casa com Peça Aliada
-
 
 
             if(tipoMovimentoPeca == TipoMovimentoDaPeca.HORIZONTAL) {
@@ -357,10 +518,13 @@ public class Tabuleiro {
         return movimentosDisponiveis;
     }
 
+
+
+
     private List<Peca> gerarPecas(String[] pecasPorLinha, Jogador jogador, CorPeca corPeca) {
 
         List<Peca> pecas = new ArrayList<>();
-
+        /*
         //.split("_") separa o nome de peças como Peão, Bispo, Cavalo e Torre que tem um Id vinculado
         //ao nome.
 
@@ -368,7 +532,7 @@ public class Tabuleiro {
 
             pecas.add(new Peca(corPeca, TipoPeca.valueOf(nomePeca.split("_")[0]), nomePeca + "_JG" + jogador.getJogadorId(), jogador));
         }
-
+        */
         return pecas;
     }
 
