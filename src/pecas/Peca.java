@@ -1,3 +1,8 @@
+package pecas;
+import enums.CorPeca;
+import enums.TipoMovimentoDaPeca;
+import jogadores.Jogador;
+
 public abstract class Peca {
 
     private CorPeca cor;

@@ -1,3 +1,9 @@
+package pecas;
+
+import enums.CorPeca;
+import enums.TipoMovimentoDaPeca;
+import jogadores.Jogador;
+
 public class Rainha extends Peca{
 
     public Rainha(CorPeca cor, String nome, Jogador jogador) {

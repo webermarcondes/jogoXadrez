@@ -1,4 +1,10 @@
-public class Bispo extends Peca{
+package pecas;
+
+import enums.CorPeca;
+import enums.TipoMovimentoDaPeca;
+import jogadores.Jogador;
+
+public class Bispo extends Peca {
 
     public Bispo(CorPeca cor, String nome, Jogador jogador) {
 

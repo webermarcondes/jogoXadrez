@@ -1,3 +1,9 @@
+import enums.CorPeca;
+import enums.TipoDeCasaDoTabuleiro;
+import enums.TipoMovimentoDaPeca;
+import jogadores.Jogador;
+import pecas.Peca;
+
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -133,35 +139,32 @@ public class Tabuleiro {
         }
     }
 
-    public Map<String, Map<String,List<int[]>>> calcularMovimentosPorPeca(int linhaPeca, int colunaPeca) {
+    public Map<String, Map<TipoDeCasaDoTabuleiro,List<int[]>>> calcularMovimentosPorPeca(int[] posicaoDaPeca) {
 
 
-        Map<String, Map<String,List<int[]>>> movimentosDaPeca = new LinkedHashMap<>();
+        Map<String, Map<TipoDeCasaDoTabuleiro,List<int[]>>> movimentosDaPeca = new LinkedHashMap<>();
 
-        Peca peca = casas[linhaPeca][colunaPeca];
-
-        for(TipoMovimentoDaPeca tipoMovimento: peca.getTiposMovimentoDaPeca()) {
+        for(TipoMovimentoDaPeca tipoMovimento: casas[posicaoDaPeca[0]][posicaoDaPeca[1]].getTiposMovimentoDaPeca()) {
 
             if(tipoMovimento == TipoMovimentoDaPeca.VERTICAL_CIMA || tipoMovimento == TipoMovimentoDaPeca.VERTICAL_BAIXO) {
 
-                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoPeao(new int[]{linhaPeca, colunaPeca},
-
-                                                                                    peca.getJogador().getJogadorId(),
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoPeao(posicaoDaPeca,
+                                                                                    casas[posicaoDaPeca[0]][posicaoDaPeca[1]].getJogador().getJogadorId(),
                                                                                     tipoMovimento));
             }
 
             else if (tipoMovimento == TipoMovimentoDaPeca.MOVIMENTO_EM_L) {
 
-                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoCavalo(new int[]{linhaPeca, colunaPeca},
-                                                                                      peca.getJogador().getJogadorId()));
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoCavalo(posicaoDaPeca,
+                                                                                      casas[posicaoDaPeca[0]][posicaoDaPeca[1]].getJogador().getJogadorId()));
 
             }
 
 
             else if(tipoMovimento == TipoMovimentoDaPeca.MOVIMENTO_DO_REI) {
 
-                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoRei(new int[]{linhaPeca, colunaPeca},
-                                                                                              peca.getJogador().getJogadorId()));
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDoRei(posicaoDaPeca,
+                                                                                   casas[posicaoDaPeca[0]][posicaoDaPeca[1]].getJogador().getJogadorId()));
             }
 
 
@@ -171,10 +174,9 @@ public class Tabuleiro {
                 //como o peão que anda reto e ataca em diagonal.
 
 
-                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDisponiveisParaAMesmaDirecao(new int[]{linhaPeca, colunaPeca},
-                        peca.getJogador().getJogadorId(),
-                        tipoMovimento));
-
+                movimentosDaPeca.put(tipoMovimento.name(), calcularMovimentosDisponiveisParaAMesmaDirecao(posicaoDaPeca,
+                                                                                                          casas[posicaoDaPeca[0]][posicaoDaPeca[1]].getJogador().getJogadorId(),
+                                                                                                          tipoMovimento));
 
                 }
             }
@@ -183,11 +185,11 @@ public class Tabuleiro {
     }
 
 
-    private Map<String, List<int[]>> calcularMovimentosDoCavalo(int[] posicaoAtualPeca, int jogadorId) {
+    private Map<TipoDeCasaDoTabuleiro, List<int[]>> calcularMovimentosDoCavalo(int[] posicaoAtualPeca, int jogadorId) {
 
-        Map<String, List<int[]>> movimentosValidosDoCavalo = new LinkedHashMap<>();
-        movimentosValidosDoCavalo.put("Casas Livres", new ArrayList<int[]>());
-        movimentosValidosDoCavalo.put("Casas com Inimigo", new ArrayList<int[]>());
+        Map<TipoDeCasaDoTabuleiro, List<int[]>> movimentosValidosDoCavalo = new LinkedHashMap<>();
+        movimentosValidosDoCavalo.put(TipoDeCasaDoTabuleiro.CASA_VAZIA, new ArrayList<int[]>());
+        movimentosValidosDoCavalo.put(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO, new ArrayList<int[]>());
 
         List<int[]> possiveisMovimentosDoCavalo = new ArrayList<>();
 
@@ -212,11 +214,11 @@ public class Tabuleiro {
             if((movimento[0] > -1 && movimento[0] < 8) && (movimento[1] > -1 && movimento[1] < 8)) {
 
                     if(casas[movimento[0]][movimento[1]] == null) {
-                        movimentosValidosDoCavalo.get("Casas Livres").add(movimento);
+                        movimentosValidosDoCavalo.get(TipoDeCasaDoTabuleiro.CASA_VAZIA).add(movimento);
                     }
 
                     else if(casas[movimento[0]][movimento[1]].getJogador().getJogadorId() != jogadorId) {
-                        movimentosValidosDoCavalo.get("Casas com Inimigo").add(movimento);
+                        movimentosValidosDoCavalo.get(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO).add(movimento);
                     }
 
             }
@@ -227,11 +229,11 @@ public class Tabuleiro {
     }
 
 
-    private Map<String, List<int[]>> calcularMovimentosDoPeao(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoDoPeao) {
+    private Map<TipoDeCasaDoTabuleiro, List<int[]>> calcularMovimentosDoPeao(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoDoPeao) {
 
-        Map<String, List<int[]>> movimentosDisponiveis = new LinkedHashMap<>();
-        movimentosDisponiveis.put("Casas Livres", new ArrayList<int[]>());
-        movimentosDisponiveis.put("Casas com Inimigo", new ArrayList<int[]>());
+        Map<TipoDeCasaDoTabuleiro, List<int[]>> movimentosDisponiveis = new LinkedHashMap<>();
+        movimentosDisponiveis.put(TipoDeCasaDoTabuleiro.CASA_VAZIA, new ArrayList<int[]>());
+        movimentosDisponiveis.put(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO, new ArrayList<int[]>());
 
         List<int[]> possiveisMovimentosParaAtaque = new ArrayList<>();
 
@@ -269,7 +271,7 @@ public class Tabuleiro {
 
             if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]] == null) { //Casa com peça vazia
 
-                movimentosDisponiveis.get("Casas Livres").add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+                movimentosDisponiveis.get(TipoDeCasaDoTabuleiro.CASA_VAZIA).add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
 
             }
 
@@ -299,7 +301,7 @@ public class Tabuleiro {
                 peca = casas[movimento[0]][movimento[1]];
                 if(peca != null && peca.getJogador().getJogadorId() != jogadorId) {
 
-                    movimentosDisponiveis.get("Casas com Inimigo").add(new int[]{movimento[0], movimento[1]});
+                    movimentosDisponiveis.get(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO).add(movimento);
 
 
                 }
@@ -310,11 +312,11 @@ public class Tabuleiro {
         return movimentosDisponiveis;
     }
 
-    private Map<String, List<int[]>> calcularMovimentosDoRei(int[] posicaoAtualPeca, int jogadorId) {
+    private Map<TipoDeCasaDoTabuleiro, List<int[]>> calcularMovimentosDoRei(int[] posicaoAtualPeca, int jogadorId) {
 
-        Map<String, List<int[]>> movimentosValidosDoRei = new LinkedHashMap<>();
-        movimentosValidosDoRei.put("Casas Livres", new ArrayList<int[]>());
-        movimentosValidosDoRei.put("Casas com Inimigo", new ArrayList<int[]>());
+        Map<TipoDeCasaDoTabuleiro, List<int[]>> movimentosValidosDoRei = new LinkedHashMap<>();
+        movimentosValidosDoRei.put(TipoDeCasaDoTabuleiro.CASA_VAZIA, new ArrayList<int[]>());
+        movimentosValidosDoRei.put(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO, new ArrayList<int[]>());
 
         List<int[]> possiveisMovimentosDoRei = new ArrayList<>();
 
@@ -340,11 +342,11 @@ public class Tabuleiro {
             if((movimento[0] > -1 && movimento[0] < 8) && (movimento[1] > -1 && movimento[1] < 8)) {
 
                 if(casas[movimento[0]][movimento[1]] == null) {
-                    movimentosValidosDoRei.get("Casas Livres").add(movimento);
+                    movimentosValidosDoRei.get(TipoDeCasaDoTabuleiro.CASA_VAZIA).add(movimento);
                 }
 
                 else if(casas[movimento[0]][movimento[1]].getJogador().getJogadorId() != jogadorId) {
-                    movimentosValidosDoRei.get("Casas com Inimigo").add(movimento);
+                    movimentosValidosDoRei.get(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO).add(movimento);
                 }
 
             }
@@ -357,11 +359,11 @@ public class Tabuleiro {
     //responsável por calcular movimentos livres e de ataque
     //para vertical, horizontal e diagonal
 
-    private Map<String, List<int[]>> calcularMovimentosDisponiveisParaAMesmaDirecao(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoPeca) {
+    private Map<TipoDeCasaDoTabuleiro, List<int[]>> calcularMovimentosDisponiveisParaAMesmaDirecao(int[] posicaoAtualPeca, int jogadorId, TipoMovimentoDaPeca tipoMovimentoPeca) {
 
-        Map<String, List<int[]>> movimentosDisponiveis = new LinkedHashMap<>();
-        movimentosDisponiveis.put("Casas Livres", new ArrayList<int[]>());
-        movimentosDisponiveis.put("Casas com Inimigo", new ArrayList<int[]>());
+        Map<TipoDeCasaDoTabuleiro, List<int[]>> movimentosDisponiveis = new LinkedHashMap<>();
+        movimentosDisponiveis.put(TipoDeCasaDoTabuleiro.CASA_VAZIA, new ArrayList<int[]>());
+        movimentosDisponiveis.put(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO, new ArrayList<int[]>());
 
         Supplier<Boolean> analisarPosicaoAnterior;
         Supplier<Boolean> analisarProximaPosicao;
@@ -442,12 +444,12 @@ public class Tabuleiro {
         while(analisarPosicaoAnterior.get()) {
 
             if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]] == null) {
-                movimentosDisponiveis.get("Casas Livres").addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
+                movimentosDisponiveis.get(TipoDeCasaDoTabuleiro.CASA_VAZIA).addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
 
             }
 
             else if (casas[posicaoAnteriorPeca[0]][posicaoAnteriorPeca[1]].getJogador().getJogadorId() != jogadorId) {
-                movimentosDisponiveis.get("Casas com Inimigo").addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
+                movimentosDisponiveis.get(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO).addFirst(new int[]{posicaoAnteriorPeca[0], posicaoAnteriorPeca[1]});
                 break;
 
             } //Casa com Peça Inimiga
@@ -480,13 +482,13 @@ public class Tabuleiro {
         while(analisarProximaPosicao.get()) {
 
             if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]] == null) {
-                movimentosDisponiveis.get("Casas Livres").add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+                movimentosDisponiveis.get(TipoDeCasaDoTabuleiro.CASA_VAZIA).add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
 
 
             }
 
             else if (casas[proximaPosicaoPeca[0]][proximaPosicaoPeca[1]].getJogador().getJogadorId() != jogadorId) {
-                movimentosDisponiveis.get("Casas com Inimigo").add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
+                movimentosDisponiveis.get(TipoDeCasaDoTabuleiro.CASA_OCUPADA_POR_INIMIGO).add(new int[]{proximaPosicaoPeca[0], proximaPosicaoPeca[1]});
                 break;
 
             } //Casa com Peça Inimiga
@@ -525,12 +527,12 @@ public class Tabuleiro {
 
         List<Peca> pecas = new ArrayList<>();
         /*
-        //.split("_") separa o nome de peças como Peão, Bispo, Cavalo e Torre que tem um Id vinculado
+        //.split("_") separa o nome de peças como Peão, pecas.Bispo, pecas.Cavalo e pecas.Torre que tem um Id vinculado
         //ao nome.
 
         for(String nomePeca : pecasPorLinha) {
 
-            pecas.add(new Peca(corPeca, TipoPeca.valueOf(nomePeca.split("_")[0]), nomePeca + "_JG" + jogador.getJogadorId(), jogador));
+            pecas.add(new pecas.Peca(corPeca, TipoPeca.valueOf(nomePeca.split("_")[0]), nomePeca + "_JG" + jogador.getJogadorId(), jogador));
         }
         */
         return pecas;

@@ -1,3 +1,7 @@
+package jogadores;
+
+import enums.TipoJogador;
+
 public class Jogador {
 
     private TipoJogador tipoJogador;
